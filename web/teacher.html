@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ИИ-наставник — панель преподавателя</title>
+<link rel="icon" href="/icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="/common.css">
+<link rel="stylesheet" href="/teacher.css">
+</head>
+<body>
+<header class="topbar">
+  <a class="brand" href="#courses"><span class="logo-mx"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span>Наставник<span class="label">преподаватель</span></a>
+  <div class="spacer"></div>
+  <span id="llmBadge" class="badge"></span>
+  <span id="userName" class="label muted"></span>
+  <button class="ghost sm" onclick="logout()"><svg class="ic" viewBox="0 0 16 16"><path d="M6 2.5H2.5v11H6M10 5l3 3-3 3M13 8H6"/></svg>Выйти</button>
+</header>
+<div class="layout">
+  <nav class="side">
+    <a href="/agent" class="agent-link"><span class="n"><span class="ai-mx idle" style="--s:3px"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span></span>ИИ-агент</a>
+    <a href="#courses" data-nav="courses"><span class="n">01</span>Курсы и задания</a>
+    <a href="#live" data-nav="live"><span class="n">02</span>Живая пара</a>
+    <a href="#reports" data-nav="reports"><span class="n">03</span>Отчёты и оценки</a>
+    <a href="#groups" data-nav="groups"><span class="n">04</span>Группы</a>
+    <a href="#settings" data-nav="settings"><span class="n">05</span>Модели и настройки</a>
+    <a href="#agentpolicy" data-nav="agentpolicy"><span class="n">06</span>Агент для студентов</a>
+    <div class="side-foot">
+      <span class="ai-mx idle" style="--s:6px"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span>
+      <span class="label muted">ИИ-наставник<br>локальный прототип</span>
+    </div>
+  </nav>
+  <main id="view" class="view"></main>
+</div>
+<script src="/common.js"></script>
+<script src="/teacher.js"></script>
+</body>
+</html>

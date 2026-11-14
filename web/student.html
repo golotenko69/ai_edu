@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ИИ-наставник — рабочее место</title>
+<link rel="icon" href="/icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="/common.css">
+<link rel="stylesheet" href="/student.css">
+</head>
+<body>
+<header class="topbar">
+  <a class="brand" href="#" id="toHome"><span class="logo-mx"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span>Наставник</a>
+  <nav class="crumbs label"><a href="#" id="toList">Задания</a><span id="crumbTask"></span></nav>
+  <div class="spacer"></div>
+  <a class="btn sm" href="/agent" title="Универсальный ИИ-агент для своих задач и проектов"><span class="ai-mx idle" style="--s:3px"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span>ИИ-агент</a>
+  <span id="modeBadge" class="badge hidden"></span>
+  <span id="userName" class="label muted"></span>
+  <button class="ghost sm" onclick="logout()" title="Выйти"><svg class="ic" viewBox="0 0 16 16"><path d="M6 2.5H2.5v11H6M10 5l3 3-3 3M13 8H6"/></svg>Выйти</button>
+</header>
+
+<!-- Список заданий -->
+<main id="listView" class="list-view">
+  <div id="courses"></div>
+</main>
+
+<!-- Рабочее место -->
+<main id="workView" class="work hidden">
+  <aside class="pane task-pane">
+    <div class="pane-body" id="taskPane">
+      <div>
+        <span class="eyebrow" id="taskMeta"></span>
+        <h2 id="taskTitle"></h2>
+      </div>
+      <div id="taskDesc" class="task-desc"></div>
+      <div id="taskRules"></div>
+      <div>
+        <span class="eyebrow">Примеры</span>
+        <div id="taskTests"></div>
+      </div>
+    </div>
+  </aside>
+
+  <section class="pane editor-pane">
+    <div class="toolbar">
+      <button class="primary" id="btnRun" title="Ctrl+Enter"><svg class="ic" viewBox="0 0 16 16"><path d="M5 3l9 5-9 5z"/></svg>Запустить</button>
+      <button id="btnTest"><svg class="ic" viewBox="0 0 16 16"><path d="M2.5 4.5h3M2.5 8h3M2.5 11.5h3M8 4.5l1 1 2-2M8 8h5.5M8 11.5h5.5"/></svg>Тесты</button>
+      <span class="sep"></span>
+      <span class="legend label"><span class="sw sw-agent"></span>строки агента</span>
+      <div class="spacer"></div>
+      <span id="saveState" class="label muted"></span>
+      <button id="btnSubmit"><svg class="ic" viewBox="0 0 16 16"><path d="M2 8h11M9 4l4 4-4 4"/></svg>Сдать работу</button>
+    </div>
+    <div id="editor" class="editor"></div>
+    <div class="bottom">
+      <div class="tabs">
+        <button class="tab active" data-tab="out">Вывод</button>
+        <button class="tab" data-tab="in">Ввод stdin</button>
+        <button class="tab" data-tab="tests">Тесты</button>
+        <div class="spacer"></div>
+        <button class="sm ghost" id="btnExplainErr" title="Попросить агента объяснить последнюю ошибку"><svg class="ic" viewBox="0 0 16 16"><path d="M6 6a2 2 0 114 0c0 1.5-2 1.7-2 3.2M8 12v.5"/></svg>Объяснить ошибку</button>
+      </div>
+      <div class="runbar"><div class="progress hidden" id="runProgress"></div></div>
+      <div class="tab-body" data-body="out"><pre id="output" class="console muted">Нажмите «Запустить», чтобы выполнить программу.</pre></div>
+      <div class="tab-body hidden" data-body="in"><textarea id="stdin" class="mono console-in" placeholder="Данные, которые программа прочитает через input() / cin"></textarea></div>
+      <div class="tab-body hidden" data-body="tests"><div id="testResults" class="console"><span class="muted">Тесты ещё не запускались.</span></div></div>
+    </div>
+  </section>
+
+  <aside class="pane agent-pane">
+    <div class="agent-head">
+      <span class="ai-mx idle" id="agentMx" style="--s:5px"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span>
+      <h3 class="grow">ИИ-агент</h3>
+      <span id="hintCounter" class="badge"></span>
+    </div>
+    <div id="modeInfo" class="mode-info"></div>
+    <div id="pendingBanner" class="pending-banner hidden"></div>
+    <div id="chat" class="chat"></div>
+    <form id="askForm" class="ask">
+      <textarea id="askInput" rows="3" placeholder="Вопрос агенту. Enter — отправить, Shift+Enter — новая строка"></textarea>
+      <div class="row">
+        <span class="label muted grow">Агент видит задание и ваш код</span>
+        <button class="primary" id="askBtn" type="submit">Отправить<svg class="ic" viewBox="0 0 16 16"><path d="M2 8h11M9 4l4 4-4 4"/></svg></button>
+      </div>
+    </form>
+  </aside>
+</main>
+
+<!-- Оверлей контрольной -->
+<div id="controlOverlay" class="control-overlay hidden"></div>
+
+<script src="/common.js"></script>
+<script src="/vendor/vs/loader.js"></script>
+<script src="/student.js"></script>
+</body>
+</html>

@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ИИ-наставник — вход</title>
+<link rel="icon" href="/icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="/common.css">
+<style>
+  body { min-height: 100vh; display: grid; grid-template-rows: auto 1fr auto; }
+  .top { display: flex; align-items: center; justify-content: space-between; padding: 28px 48px; }
+  .stage { display: grid; grid-template-columns: repeat(12, 1fr); gap: 24px; padding: 0 48px; align-items: center; }
+  .pitch { grid-column: 1 / span 7; padding: 40px 0; }
+  .pitch h1 { font-size: clamp(40px, 6vw, 88px); line-height: .98; letter-spacing: -0.045em; max-width: 11em; margin-bottom: 40px; }
+  .principles { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0; border-top: 1px solid var(--line); max-width: 760px; }
+  .principles > div { padding: 18px 20px 0 0; }
+  .principles .num { font-size: 44px; display: block; margin-bottom: 10px; color: var(--line-2); transition: color var(--t-fast) var(--ease); }
+  .principles > div:hover .num { color: var(--text); }
+  .principles p { margin: 0; color: var(--muted); font-size: 14px; max-width: 18em; }
+  .login { grid-column: 9 / span 4; background: var(--panel); border: 1px solid var(--line); padding: 32px; }
+  .login h2 { font-size: 28px; margin-bottom: 24px; }
+  .login form { display: flex; flex-direction: column; gap: 16px; }
+  .login button[type=submit] { justify-content: space-between; padding: 13px 16px; margin-top: 6px; }
+  .demo { margin-top: 26px; padding-top: 20px; border-top: 1px solid var(--line); }
+  .demo .list { display: flex; flex-direction: column; }
+  .demo button { justify-content: space-between; border: none; border-bottom: 1px solid var(--line); padding: 11px 0; font-weight: 400; transition: padding var(--t-fast) var(--ease), background var(--t-fast) var(--ease), color var(--t-fast) var(--ease); }
+  .demo button:hover { padding-left: 10px; padding-right: 10px; }
+  .demo button .label { color: inherit; opacity: .7; }
+  .err { border: 1px solid var(--text); padding: 9px 12px; font-size: 14px; }
+  .foot { padding: 24px 48px; display: flex; gap: 24px; color: var(--dim); }
+  @media (max-width: 960px) {
+    .top, .stage, .foot { padding-left: 20px; padding-right: 20px; }
+    .pitch, .login { grid-column: 1 / -1; }
+    .principles { grid-template-columns: 1fr; }
+    .login { margin-bottom: 30px; }
+  }
+</style>
+</head>
+<body>
+<header class="top rv" style="--i:0">
+  <div class="brand"><span class="logo-mx"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span>ИИ-наставник</div>
+  <span class="label muted">Учебная платформа · локальный прототип</span>
+</header>
+
+<main class="stage">
+  <section class="pitch">
+    <span class="eyebrow rv" style="--i:1">Программирование · вуз и колледж</span>
+    <h1 class="rv" style="--i:2">Пишем код с&nbsp;ИИ и&nbsp;понимаем каждую строку<span class="caret"></span></h1>
+    <div class="principles rv" style="--i:3">
+      <div><span class="num">01</span><p>Агент работает по правилам преподавателя: объясняет, подсказывает или молчит.</p></div>
+      <div><span class="num">02</span><p>После кода от ИИ — вопрос на понимание. Без ответа дальше не пройти.</p></div>
+      <div><span class="num">03</span><p>Весь путь к решению записан: правки, диалог, запуски, проверки.</p></div>
+    </div>
+  </section>
+
+  <section class="login rv" style="--i:3">
+    <span class="eyebrow">Вход</span>
+    <h2>Учётная запись вуза</h2>
+    <form id="f">
+      <label class="field"><span>Логин</span><input name="login" autocomplete="username" autofocus required></label>
+      <label class="field"><span>Пароль</span><input name="password" type="password" autocomplete="current-password" required></label>
+      <div id="err" class="err hidden"></div>
+      <button class="primary" type="submit"><span>Войти</span><svg class="ic" viewBox="0 0 16 16"><path d="M3 8h10M9 4l4 4-4 4"/></svg></button>
+    </form>
+    <div class="demo">
+      <span class="eyebrow">Демо-учётки</span>
+      <div class="list">
+        <button data-l="teacher" data-p="teacher"><span>Ирина Павлова</span><span class="label">преподаватель</span></button>
+        <button data-l="student1" data-p="student"><span>Алексей Смирнов</span><span class="label">студент</span></button>
+        <button data-l="student2" data-p="student"><span>Мария Кузнецова</span><span class="label">студент</span></button>
+        <button data-l="admin" data-p="admin"><span>Администратор</span><span class="label">админ</span></button>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="foot label rv" style="--i:4">
+  <span>Режимы агента 01–05</span><span>Данные хранятся локально</span><span>Модели: Ollama · LM Studio · vLLM</span>
+</footer>
+
+<script src="/common.js"></script>
+<script>
+  const go = u => location.href = (u.role === 'student') ? '/student' : '/teacher';
+  api('GET', '/api/me').then(r => go(r.user)).catch(() => {});
+  async function doLogin(login, password) {
+    $('#err').classList.add('hidden');
+    try {
+      try { sessionStorage.removeItem('aiedu_token'); } catch (e) { }
+      const r = await api('POST', '/api/login', { login, password });
+      try { sessionStorage.setItem('aiedu_token', r.token); } catch (e) { }
+      go(r.user);
+    } catch (e) {
+      $('#err').textContent = e.message;
+      $('#err').classList.remove('hidden');
+    }
+  }
+  $('#f').addEventListener('submit', e => {
+    e.preventDefault();
+    const fd = new FormData(e.target);
+    doLogin(fd.get('login'), fd.get('password'));
+  });
+  $$('.demo button').forEach(b => b.onclick = () => doLogin(b.dataset.l, b.dataset.p));
+</script>
+</body>
+</html>

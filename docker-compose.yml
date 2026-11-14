@@ -1,0 +1,28 @@
+# Платформа в Docker. Модель — на хосте (Ollama / LM Studio), либо см. docker-compose.ollama.yml.
+#   docker compose up -d          → http://localhost:8000
+services:
+  aiedu:
+    image: ${AIEDU_IMAGE:-ai-nastavnik:latest}
+    build: .
+    container_name: ai-nastavnik
+    restart: unless-stopped
+    ports:
+      - "${AIEDU_PORT:-8000}:8000"
+    volumes:
+      - aiedu-data:/app/data
+    extra_hosts:
+      - "host.docker.internal:host-gateway"   # доступ к Ollama/LM Studio на хосте (Linux)
+    environment:
+      # Необязательно: модель по умолчанию (иначе — демо-режим, настраивается в панели преподавателя)
+      AIEDU_LLM_PROVIDER: ${AIEDU_LLM_PROVIDER:-}
+      AIEDU_LLM_BASE_URL: ${AIEDU_LLM_BASE_URL:-http://host.docker.internal:11434/v1}
+      AIEDU_LLM_MODEL: ${AIEDU_LLM_MODEL:-}
+      AIEDU_CHECKER_MODEL: ${AIEDU_CHECKER_MODEL:-}
+      AIEDU_LLM_API_KEY: ${AIEDU_LLM_API_KEY:-}
+    # ограничения для запуска кода студентов
+    mem_limit: 1g
+    cpus: 2
+    pids_limit: 256
+
+volumes:
+  aiedu-data:

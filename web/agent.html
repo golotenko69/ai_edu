@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ИИ-агент — проекты</title>
+<link rel="icon" href="/icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="/common.css">
+<link rel="stylesheet" href="/agent.css">
+</head>
+<body>
+<header class="topbar">
+  <a class="brand" href="#"><span class="logo-mx"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span>Наставник<span class="label">агент</span></a>
+  <nav class="topnav label" id="topnav"></nav>
+  <div class="spacer"></div>
+  <span id="modeBadge" class="badge hidden"></span>
+  <span id="userName" class="label muted"></span>
+  <button class="ghost sm" onclick="logout()"><svg class="ic" viewBox="0 0 16 16"><path d="M6 2.5H2.5v11H6M10 5l3 3-3 3M13 8H6"/></svg>Выйти</button>
+</header>
+
+<!-- Главная: проекты -->
+<main id="homeView" class="home hidden"></main>
+
+<!-- Рабочая среда проекта -->
+<main id="ideView" class="ide hidden">
+  <aside class="files">
+    <div class="files-head">
+      <span class="eyebrow" id="projOwner">Проект</span>
+      <h3 id="projTitle"></h3>
+    </div>
+    <div class="files-tools">
+      <button class="sm" id="btnNewFile">Новый файл</button>
+    </div>
+    <div id="fileTree" class="tree"></div>
+    <div class="files-foot" id="langInfo"></div>
+  </aside>
+
+  <section class="code">
+    <div class="toolbar">
+      <span id="curFile" class="label"></span>
+      <span id="dirtyMark" class="label muted"></span>
+      <div class="spacer"></div>
+      <button id="btnSave" title="Ctrl+S">Сохранить</button>
+      <button class="primary" id="btnRun" title="Ctrl+Enter">Запустить</button>
+    </div>
+    <div id="editor" class="editor"></div>
+    <div class="bottom">
+      <div class="tabs">
+        <button class="tab active" data-tab="out">Вывод</button>
+        <button class="tab" data-tab="in">Ввод stdin</button>
+      </div>
+      <div class="runbar"><div class="progress hidden" id="runProgress"></div></div>
+      <div class="tab-body" data-body="out"><pre id="output" class="console muted">Выберите файл и нажмите «Запустить».</pre></div>
+      <div class="tab-body hidden" data-body="in"><textarea id="stdin" class="mono console-in" placeholder="Входные данные программы"></textarea></div>
+    </div>
+  </section>
+
+  <aside class="agent">
+    <div class="agent-head">
+      <span class="ai-mx idle" id="agentMx" style="--s:5px"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span>
+      <h3 class="grow">ИИ-агент</h3>
+      <div id="modeBox"></div>
+    </div>
+    <div id="modeInfo" class="mode-info"></div>
+    <div id="chat" class="chat"></div>
+    <div id="quick" class="quick"></div>
+    <form id="askForm" class="ask">
+      <textarea id="askInput" rows="3" placeholder="Задача для агента. Enter — отправить, Shift+Enter — новая строка"></textarea>
+      <div class="row">
+        <span class="label muted grow" id="askHint">Агент видит все файлы проекта</span>
+        <button type="button" class="hidden" id="btnStop">Остановить</button>
+        <button class="primary" id="askBtn" type="submit">Отправить</button>
+      </div>
+    </form>
+  </aside>
+</main>
+
+<script src="/common.js"></script>
+<script src="/vendor/vs/loader.js"></script>
+<script src="/agent.js"></script>
+</body>
+</html>
