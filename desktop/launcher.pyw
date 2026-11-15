@@ -1,11 +1,15 @@
 """Десктопная версия «ИИ-наставника».
 
 Запускается ярлыком с рабочего стола (pythonw — без консольного окна):
-  1. если платформа уже работает на порту (например, в Docker) — подключается к ней;
-  2. иначе поднимает сервер внутри этого процесса;
+  1. поднимает локальный сервер платформы (данные — в папке data/ проекта) на своём порту 8040;
+     если он уже запущен (второе окно) — подключается к нему;
+  2. если используется локальная модель Ollama и она не запущена — запускает Ollama;
   3. открывает платформу отдельным окном приложения (Microsoft Edge / Chrome в режиме --app),
      со своим профилем — без адресной строки и вкладок;
   4. когда окно закрыто — останавливает сервер, если запускал его сам.
+
+Подключиться к платформе в Docker вместо локального сервера:
+  переменная окружения AIEDU_DESKTOP_URL=http://127.0.0.1:8000/
 """
 import os
 import shutil
@@ -19,8 +23,9 @@ import webbrowser
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, ROOT)
-PORT = int(os.environ.get("AIEDU_PORT", "8000"))
+PORT = int(os.environ.get("AIEDU_DESKTOP_PORT", "8040"))
 URL = f"http://127.0.0.1:{PORT}/"
+EXTERNAL_URL = os.environ.get("AIEDU_DESKTOP_URL", "").strip()
 LOG = os.path.join(ROOT, "data", "desktop.log")
 
 
@@ -95,10 +100,65 @@ def start_server():
     return False
 
 
+def find_ollama():
+    cands = [
+        r"D:\Ollama\app\ollama app.exe",
+        os.path.expandvars(r"%LOCALAPPDATA%\Programs\Ollama\ollama app.exe"),
+    ]
+    for c in cands:
+        if os.path.exists(c):
+            return c
+    exe = shutil.which("ollama")
+    return exe
+
+
+def ensure_ollama():
+    """Если платформа настроена на локальную Ollama, а она не запущена — запустить её."""
+    try:
+        from server import db, llm
+        db.init()
+        cfg = llm.role_config("main")
+    except Exception as e:  # noqa
+        log(f"cannot read model settings: {e!r}")
+        return
+    base = (cfg.get("base_url") or "")
+    if cfg.get("provider") != "openai" or ":11434" not in base:
+        return
+    host = base.split("/v1")[0]
+    if alive_api(host + "/api/version"):
+        return
+    exe = find_ollama()
+    if not exe:
+        log("ollama not found")
+        return
+    args = [exe] if exe.lower().endswith("ollama app.exe") else [exe, "serve"]
+    subprocess.Popen(args, cwd=os.path.dirname(exe), creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0))
+    log(f"ollama started: {exe}")
+    for _ in range(60):
+        if alive_api(host + "/api/version"):
+            log("ollama is up")
+            return
+        time.sleep(0.5)
+
+
+def alive_api(url):
+    try:
+        with urllib.request.urlopen(url, timeout=1.5) as r:
+            return r.status == 200
+    except Exception:
+        return False
+
+
 def main():
     global PORT, URL
     own_server = False
-    if not alive(URL):
+    if EXTERNAL_URL:
+        URL = EXTERNAL_URL.rstrip("/") + "/"
+        if not alive(URL):
+            message(f"Платформа по адресу {URL} не отвечает. Запустите её (например, docker compose up -d).")
+            return
+        log(f"connected to external platform {URL}")
+    elif not alive(URL):
         if port_busy(PORT):
             # порт занят чем-то другим — берём следующий свободный
             for p in range(PORT + 1, PORT + 50):
@@ -112,6 +172,8 @@ def main():
         log(f"server started on {URL}")
     else:
         log(f"connected to running platform {URL}")
+    if not EXTERNAL_URL:
+        threading.Thread(target=ensure_ollama, daemon=True).start()
 
     browser = find_browser()
     if not browser:
