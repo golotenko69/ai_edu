@@ -74,6 +74,11 @@ AIEDU_LLM_MODEL=qwen2.5-coder:14b docker compose -f docker-compose.yml -f docker
 | `AIEDU_CHECKER_MODEL` | отдельная модель-контролёр |
 | `AIEDU_LLM_API_KEY` | ключ, если сервер модели его требует |
 
+**Готовый образ из Docker Hub** (amd64 и arm64):
+```bash
+docker run -d -p 8000:8000 -v aiedu-data:/app/data --add-host host.docker.internal:host-gateway andrewgolotenko/ai-nastavnik
+```
+
 **Публикация в Docker Hub** (собирает образ под amd64 и arm64):
 ```bash
 docker_publish.bat ВАШ_ЛОГИН

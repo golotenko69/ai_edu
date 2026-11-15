@@ -11,9 +11,19 @@ ENV PYTHONUNBUFFERED=1 \
     AIEDU_IN_DOCKER=1 \
     AIEDU_DB=/app/data/aiedu.sqlite3
 
-RUN apt-get update \
- && apt-get install -y --no-install-recommends g++ \
- && rm -rf /var/lib/apt/lists/*
+# g++ для заданий на C++. Сеть до deb.debian.org бывает нестабильной, поэтому —
+# повторы загрузки и запасное зеркало (mirror.yandex.ru), если основное недоступно.
+RUN set -eu; \
+    apt_install() { \
+      apt-get -o Acquire::Retries=5 -o Acquire::http::Timeout=30 update \
+      && apt-get -o Acquire::Retries=5 -o Acquire::http::Timeout=30 install -y --no-install-recommends g++; \
+    }; \
+    if ! apt_install; then \
+      echo "Основное зеркало Debian недоступно — пробую mirror.yandex.ru"; \
+      sed -i 's#http://deb.debian.org#http://mirror.yandex.ru#g' /etc/apt/sources.list.d/debian.sources; \
+      apt_install; \
+    fi; \
+    rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 COPY run.py ./
