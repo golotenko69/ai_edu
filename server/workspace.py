@@ -333,25 +333,63 @@ def build_system(project, mode, text_mode):
     if text_mode:
         s += TEXT_PROTOCOL + "\n".join(
             f"- {n}({', '.join(TOOL_SPECS[n][1])}) — {TOOL_SPECS[n][0]}" for n in tools_for(mode))
+    else:
+        s += ("\n\nДействия выполняй ТОЛЬКО через вызов инструментов, не описывай их словами. Аргументы — конкретные "
+              "значения (например path=\"main.py\"), а не описание схемы. Когда задача решена — ответь текстом.")
     return s
 
 
-TOOL_BLOCK_RE = re.compile(r"```tool\s*\n?(\{.*?\})\s*```", re.S)
+FENCED_RE = re.compile(r"```[a-zA-Z]*\s*\n?(\{.*?\})\s*```", re.S)
+
+
+def _json_candidates(content):
+    """JSON-объекты из ответа: в блоках ```tool / ```json / ``` или «голый» JSON на весь ответ."""
+    text = (content or "").strip()
+    for m in FENCED_RE.finditer(text):
+        yield m.group(1)
+    if text.startswith("{") and text.endswith("}"):
+        yield text
+    # вызовы в стиле Qwen: <tool_call>{...}</tool_call>
+    for m in re.finditer(r"<tool_call>\s*(\{.*?\})\s*</tool_call>", text, re.S):
+        yield m.group(1)
 
 
 def parse_text_tool(content):
-    m = TOOL_BLOCK_RE.search(content or "")
-    if not m:
-        return None
-    try:
-        obj = json.loads(m.group(1))
-    except ValueError:
-        return None
-    name = obj.get("name") or obj.get("tool")
-    args = obj.get("arguments") or obj.get("args") or {}
-    if not name or not isinstance(args, dict):
-        return None
-    return name, args
+    """Распознать вызов инструмента, записанный текстом. Небольшие локальные модели (например,
+    qwen2.5-coder:3b в Ollama) часто печатают вызов JSON-блоком вместо нативного tool calling."""
+    for raw in _json_candidates(content):
+        try:
+            obj = json.loads(raw)
+        except ValueError:
+            continue
+        if not isinstance(obj, dict):
+            continue
+        fn = obj.get("function") if isinstance(obj.get("function"), dict) else {}
+        name = obj.get("name") or obj.get("tool") or fn.get("name")
+        args = obj.get("arguments", obj.get("args", obj.get("parameters", fn.get("arguments", {}))))
+        if isinstance(args, str):
+            try:
+                args = json.loads(args) if args.strip() else {}
+            except ValueError:
+                continue
+        if name in TOOL_SPECS and isinstance(args, dict):
+            return name, args
+    return None
+
+
+def clean_args(args):
+    """Модель иногда подставляет вместо значения описание схемы ({"type": ..., "description": ...})."""
+    out, bad = {}, []
+    for k, v in (args or {}).items():
+        if isinstance(v, dict) and ("type" in v or "description" in v):
+            bad.append(k)
+        elif isinstance(v, (dict, list)):
+            out[k] = json.dumps(v, ensure_ascii=False)
+        elif v is None:
+            continue
+        else:
+            out[k] = str(v)
+    return out, bad
 
 
 # ---------------------------------------------------------------- демо-агент (без модели)
@@ -492,8 +530,14 @@ def _run_loop(run, project, mode, message):
             if msg.get("content") and calls[0][0] != "text":
                 _step(run, "say", text=msg["content"])
             for cid, name, args in calls:
+                args, bad = clean_args(args)
                 _step(run, "tool_call", name=name, args=_short_args(args))
-                result, summary, changed = execute_tool(pid, mode, name, args)
+                if bad:
+                    result = (f"Ошибка: в аргументах {', '.join(bad)} передано описание схемы вместо значения. "
+                              f"Повтори вызов {name} с конкретными значениями, например path=\"main.py\".")
+                    summary, changed = f"неверные аргументы: {', '.join(bad)}", False
+                else:
+                    result, summary, changed = execute_tool(pid, mode, name, args)
                 run["changed"] |= changed
                 used.append(name)
                 _step(run, "tool_result", name=name, summary=summary, preview=result[:1200], changed=changed)

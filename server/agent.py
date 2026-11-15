@@ -444,36 +444,56 @@ def grade_answer(task, check, answer):
         long_enough = len(answer.strip()) >= 30
         vague = re.fullmatch(r"\s*(не знаю|хз|ну|не понимаю|делает что-то|-|\.+)\s*", a) is not None
         score = 0.0 if vague else min(1.0, 0.35 * long_enough + 0.25 * min(mentions, 2) +
-                                      0.15 * bool(re.search(r"(потому|чтобы|так как|если|значит|возвращ|счита|выводит|преобраз)", a)))
+                                      0.15 * bool(re.search(r"(потому|чтобы|так как|если|значит|возвращ|счита|выводит|преобраз|превращ|дел[иия]т|"
+                                                                   r"разбива|собира|созда|провер|сравн|перебира|цикл|список|строк)", a)))
         passed = score >= 0.5
         fb = ("Ответ засчитан (демо-оценка по эвристике: длина ответа и упоминание элементов кода)."
               if passed else "Ответ слишком общий. Объясни, что именно происходит в этой строке и зачем она нужна.")
         return {"score": round(score, 2), "passed": passed, "feedback": fb}
 
+    # Пустые и уклончивые ответы отсекаем детерминированно — небольшие модели ставят им «0.5».
+    a = answer.strip().lower()
+    vague = (len(re.sub(r"\W", "", a)) < 8 or
+             re.fullmatch(r"(не знаю|незнаю|хз|ну|не понимаю|не помню|без понятия|что-то делает|делает что-то|"
+                          r"понятия не имею|не уверен|сложно сказать|\?+|-+|\.+)[\s.!?]*", a) is not None)
+    if vague:
+        return {"score": 0.0, "passed": False,
+                "feedback": "Ответа по существу нет. Разберите этот фрагмент — можно спросить агента — и объясните своими словами."}
+
+    heur = mock(None)
+    if llm.is_mock("checker"):
+        return heur
     try:
         data = llm.chat_json("checker", [
             {"role": "system", "content":
-                "Ты преподаватель программирования и оцениваешь ответ студента на вопрос о его коде. "
-                "Засчитывай ответ, если студент по сути верно объясняет смысл кода своими словами; "
-                "не требуй терминологической точности; не засчитывай пустые, общие или неверные ответы. "
-                "Отвечай только JSON: {\"score\": число от 0 до 1, \"passed\": true|false, "
-                "\"feedback\": \"1–2 предложения для студента\"}"},
+                "Ты преподаватель программирования и оцениваешь ответ студента на вопрос о его коде.\n"
+                "Критерии:\n"
+                "- passed=true, если студент ПО СУТИ верно объясняет, что делает код, даже простыми словами и неполно;\n"
+                "- passed=false, если ответ неверный, не про этот код или не отвечает на вопрос;\n"
+                "- не снижай оценку за отсутствие терминов, если смысл верен.\n"
+                "score: 0.0 — неверно, 0.5 — частично, 1.0 — полностью верно.\n"
+                "Отвечай только JSON: {\"score\": число, \"passed\": true|false, \"feedback\": \"1–2 предложения для студента\"}"},
             {"role": "user", "content":
                 f"Задание: {task['title']}\n\nФрагмент кода:\n```\n{fragment[:3000]}\n```\n\n"
                 f"Вопрос: {check['question']}\n\nОтвет студента: {answer[:2000]}"},
         ], mock=mock)
-    except llm.LLMError as e:
-        data = mock(None)
-        data["feedback"] = "Модель недоступна, оценка по эвристике. " + data["feedback"]
+    except llm.LLMError:
+        heur["feedback"] = "Модель недоступна, оценка по эвристике. " + heur["feedback"]
+        return heur
     try:
-        score = float(data.get("score", 0))
+        score = max(0.0, min(1.0, float(data.get("score", 0))))
     except (TypeError, ValueError):
         score = 0.0
     passed = data.get("passed")
     if not isinstance(passed, bool):
         passed = score >= 0.5
-    return {"score": max(0.0, min(1.0, score)), "passed": passed,
-            "feedback": str(data.get("feedback") or "")[:1000]}
+    feedback = str(data.get("feedback") or "")[:1000]
+    # Пограничный случай («частично», 0.5): решает содержательная проверка ответа — упоминает ли студент
+    # элементы фрагмента и объясняет ли их действие.
+    if not passed and score >= 0.5 and heur["passed"]:
+        passed, score = True, max(score, 0.6)
+        feedback = (feedback + " " if feedback else "") + "Засчитано: по сути объяснение верное."
+    return {"score": round(score, 2), "passed": passed, "feedback": feedback}
 
 
 # ---------------------------------------------------------------- метки риска
