@@ -114,3 +114,26 @@ body { display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
   .ideas, .modes-strip { grid-template-columns: 1fr; }
   .modes-strip > div + div { border-left: none; padding-left: 0; border-top: 1px solid var(--line); }
 }
+
+@media (max-width: 760px) {
+  body { height: auto; min-height: 100vh; overflow: auto; }
+  .topnav { padding-left: 8px; }
+  .topnav a { padding: 4px 6px; }
+  .home { overflow: visible; }
+  .home > .wrap { padding: 28px 16px 56px; }
+  .hero { grid-template-columns: 1fr; margin-bottom: 32px; }
+  .hero .t, .hero .side { grid-column: 1; }
+  .hero h1 { font-size: 40px; overflow-wrap: anywhere; }
+  .hero .side .num { font-size: 48px; }
+  .modes-strip { margin-bottom: 32px; }
+  .new-proj { grid-template-columns: 1fr; }
+  .proj-row .title { font-size: 19px; }
+  .ide { display: flex; flex-direction: column; }
+  .files { border-right: none; border-bottom: 1px solid var(--line); }
+  .files-head { padding: 14px 16px 8px; }
+  .tree { max-height: 160px; }
+  .code .toolbar { flex-wrap: wrap; }
+  .code .editor { height: 50vh; flex: none; }
+  .agent { border-left: none; border-top: 1px solid var(--line); height: 85vh; }
+  .mode-info .num { font-size: 28px; }
+}

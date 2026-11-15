@@ -17,6 +17,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 from . import agent, analysis, auth, db, llm, runner, seed, workspace as ws
 
+PUBLIC = os.environ.get("AIEDU_PUBLIC") == "1"
 WEB_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "web")
 COOKIE = "aiedu_token"
 PRESENCE = {}  # session_id -> время последнего опроса клиентом
@@ -1093,6 +1094,9 @@ class Handler(BaseHTTPRequestHandler):
             ctype += "; charset=utf-8"
         with open(full, "rb") as f:
             data = f.read()
+        if PUBLIC and full.endswith("index.html"):
+            # публичный режим: демо-учётки с известными паролями на странице входа не показываем
+            data = re.sub(rb'<div class="demo">.*?</div>\s*</div>', b"", data, flags=re.S)
         cache = {"Cache-Control": "max-age=86400"} if "/vendor/" in path else {}
         self.send_response(200)
         self.send_header("Content-Type", ctype)

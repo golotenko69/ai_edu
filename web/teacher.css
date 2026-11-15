@@ -103,3 +103,21 @@ body { display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
   .sess, .grid2 { grid-template-columns: 1fr; }
   .grid3, .grid4, .stats { grid-template-columns: 1fr 1fr; }
 }
+
+@media (max-width: 760px) {
+  body { height: auto; min-height: 100vh; overflow: auto; }
+  .layout { display: flex; flex-direction: column; }
+  .side { flex-direction: row; overflow-x: auto; padding: 0; border-right: none; border-bottom: 1px solid var(--line); }
+  .side a { padding: 12px 14px; white-space: nowrap; font-size: 14px; }
+  .side a:hover { padding-left: 14px; }
+  .side a.agent-link { border-bottom: none; margin-bottom: 0; padding-bottom: 12px; border-right: 1px solid var(--line); }
+  .side-foot { display: none; }
+  .view { overflow: visible; padding: 22px 16px 56px; }
+  .view-head h1 { font-size: 30px; }
+  .grid3, .grid4, .stats, .sess, .grid2 { grid-template-columns: 1fr; }
+  table { display: block; overflow-x: auto; }
+  .task-row { flex-wrap: wrap; }
+  .task-row > * { min-width: 0; }
+  .task-row .t { flex-basis: calc(100% - 64px); }
+  .view-head { align-items: flex-start; }
+}

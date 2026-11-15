@@ -124,3 +124,23 @@ body { display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
   .task-row { grid-template-columns: 60px minmax(0, 1fr) 24px; }
   .task-row .status, .task-row .mode { display: none; }
 }
+
+@media (max-width: 760px) {
+  body { height: auto; min-height: 100vh; overflow: auto; }
+  .list-view { overflow: visible; }
+  .list-view > div { padding: 28px 16px 56px; }
+  .course-head { grid-template-columns: 1fr; gap: 12px; }
+  .course-head .t, .course-head .meta { grid-column: 1; }
+  .course-head h1 { font-size: 34px; overflow-wrap: anywhere; }
+  .course-head .meta .num { font-size: 44px; }
+  .task-row { grid-template-columns: 44px minmax(0, 1fr) 18px; gap: 12px; padding: 16px 0; }
+  .task-row .num { font-size: 28px; }
+  .task-row .title { font-size: 19px; }
+  .work { display: flex; flex-direction: column; }
+  .task-pane { display: flex; border-right: none; border-bottom: 1px solid var(--line); }
+  .task-pane .pane-body { max-height: 45vh; padding: 18px 16px; }
+  .editor-pane .toolbar { flex-wrap: wrap; }
+  .editor-pane .legend { display: none; }
+  .editor-pane .editor { height: 55vh; flex: none; }
+  .agent-pane { border-left: none; border-top: 1px solid var(--line); height: 85vh; }
+}
